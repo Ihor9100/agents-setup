@@ -1,174 +1,103 @@
 ---
-
 name: codegraph
-description: Explore an existing codebase with CodeGraph to understand symbols, references, dependencies, callers, callees, data flow, and blast radius before making or reviewing code changes.
-
+description: Use CodeGraph when you need to understand an existing codebase beyond a single file: explore repository structure, trace dependencies and relationships between classes/functions/modules, find callers or usages, follow data/control flow across files, estimate impact of a change, or identify relevant code before planning, implementing, debugging, refactoring, or reviewing a task. Prefer CodeGraph over manual file-by-file searching when repository-wide context or cross-file relationships matter.
 ---
 
 # CodeGraph
 
-Use CodeGraph for structural exploration of an existing codebase before making or reviewing changes.
+Use CodeGraph to understand relationships inside an existing repository.
 
-Follow repository instructions, including `AGENTS.md`.
+Follow repository instructions such as `AGENTS.md`.
 
-## 1. Use It For
+## Use when
 
-Use CodeGraph when you need to understand:
+- exploring an unfamiliar repository or feature
+- finding how classes, functions, interfaces, or modules are connected
+- tracing callers, usages, dependencies, implementations, or overrides
+- following data or control flow across files
+- determining the blast radius of a requested change
+- gathering context before planning or implementation
+- investigating bugs whose cause may span multiple files or modules
+- reviewing changes for downstream impact
+- handling follow-up changes where existing relationships need to be re-checked
 
-* callers and callees;
-* references and implementations;
-* dependencies and dependents;
-* data flow between layers;
-* architectural relationships;
-* blast radius of a change;
-* unfamiliar existing code;
-* follow-up changes;
-* review findings.
+## Do not use when
 
-Typical cases:
+Prefer normal source inspection or search when:
 
-* modify existing behavior;
-* fix a bug;
-* refactor code;
-* change a shared contract;
-* understand how a feature flows through the system.
-
-## 2. Do Not Force It
-
-Prefer normal file reading or `rg` for:
-
-* exact text search;
-* strings and resource names;
-* XML or JSON;
-* Gradle configuration;
-* manifest entries;
-* ProGuard/R8 rules;
-* comments;
-* small obvious local changes.
+- the answer is obvious from the currently opened file
+- the task is a tiny isolated edit with no meaningful dependencies
+- an exact text search with `rg` is sufficient
+- searching strings, resource names, XML, JSON, Gradle configuration, manifest entries, comments, or similar text-based content
 
 CodeGraph complements normal repository search; it does not replace it.
 
-## 3. Verify the Index
+## Initialization
 
-Before using CodeGraph, ensure you are in the intended repository or worktree.
+Before using CodeGraph, verify that you are in the intended repository or worktree.
 
-If `.codegraph/` exists:
+If `.codegraph/` exists, verify the index when needed:
 
-* verify it with `codegraph status`.
+```bash
+codegraph status
+```
 
-Do not assume an index from another Git worktree is valid.
+If CodeGraph metadata/index is missing, initialize the current repository or worktree:
 
-If the index is unavailable, invalid, or CodeGraph fails:
+```bash
+codegraph init
+```
 
-* continue with normal repository search and source inspection;
-* report the limitation only when it affects confidence or coverage.
+Do not assume:
 
-## 4. Exploration Workflow
+- a globally installed CodeGraph means the repository is initialized
+- an index created in another Git worktree is valid for the current worktree
 
-Before changing structurally relevant code:
+If CodeGraph is unavailable, invalid, or fails, continue using normal repository search and source inspection instead of blocking the task.
 
-1. identify the primary symbol, class, function, interface, module, or feature;
-2. inspect the relevant source code;
-3. use CodeGraph to explore only useful relationships;
-4. determine the smallest affected area;
-5. inspect concrete affected files;
-6. make the change.
+## Workflow
+
+1. Identify the symbol, feature, module, flow, or behavior that needs investigation.
+2. Inspect the relevant source code.
+3. Ensure CodeGraph is initialized for the current repository or worktree.
+4. Use CodeGraph to inspect only relevant relationships and dependencies.
+5. Determine the smallest affected area and likely blast radius.
+6. Inspect the concrete affected source files.
+7. Use the findings for planning, implementation, debugging, refactoring, or review.
+8. Re-check affected usages when shared behavior or contracts change.
 
 Useful relationships may include:
 
-* callers;
-* callees;
-* references;
-* implementations;
-* overrides;
-* dependencies;
-* repository/use-case/view-model relationships;
-* mapper chains;
-* event or state propagation;
-* navigation entry points.
+- callers and callees
+- references and implementations
+- overrides
+- dependencies and dependents
+- repository / use-case / view-model relationships
+- mapper chains
+- event or state propagation
+- navigation entry points
+- cross-module dependencies
 
-Do not explore the entire repository without a specific reason.
-
-## 5. Blast Radius
-
-Before changing shared or externally used code, check relevant impact such as:
-
-* callers;
-* interface implementations;
-* overrides;
-* tests;
-* state or UI consumers;
-* mapping layers;
-* persistence or network boundaries;
-* cross-module dependencies.
-
-Pay extra attention to:
-
-* shared domain models;
-* repository interfaces;
-* public APIs;
-* navigation contracts;
-* common UI components;
-* serialization models;
-* persistence schemas;
-* DI bindings.
-
-Keep the analysis proportional to the change.
-
-## 6. Source Code Is Authoritative
+## Source of truth
 
 CodeGraph is an exploration aid, not the source of truth.
 
-Always inspect actual source code before making implementation decisions.
+Always inspect the actual source code before making implementation decisions.
 
-If CodeGraph conflicts with the repository state, trust the repository.
+If CodeGraph conflicts with the current repository state, trust the repository.
 
-## 7. Follow-Up Changes
+## Scope
 
-For follow-up requests:
-
-1. start from the new requested change;
-2. identify affected symbols;
-3. use CodeGraph only as much as needed;
-4. inspect the current implementation;
-5. make the smallest scoped change;
-6. re-check affected usages when behavior or contracts changed.
-
-Do not restart the full task workflow unless the new request introduces significant scope or architectural ambiguity.
-
-## 8. Review Findings
-
-When checking a review finding:
-
-1. inspect the reported code;
-2. verify the finding against the actual implementation;
-3. use CodeGraph for callers, dependencies, or data flow when relevant;
-4. fix only valid in-scope issues.
-
-Do not blindly trust reviewer findings.
-
-## 9. Scope
+Keep exploration proportional to the task.
 
 Avoid:
 
-* unrelated architecture audits;
-* opportunistic refactors;
-* investigating distant code with no realistic impact;
-* changing unrelated issues found during exploration.
+- broad repository scans without a concrete purpose
+- unrelated architecture audits
+- opportunistic refactors
+- investigating distant code with no realistic impact
+- changing unrelated issues discovered during exploration
 
-Report important out-of-scope issues separately.
+Prefer focused queries over broad exploration.
 
-## 10. Result
-
-After exploration, understand:
-
-* the relevant entry point;
-* important dependencies;
-* affected callers or consumers;
-* likely blast radius;
-* existing implementation pattern;
-* concrete files that need inspection or modification.
-
-Do not produce a separate CodeGraph report unless the user asks for one.
-
-Use the findings directly for implementation, review, or investigation.
+Do not produce a separate CodeGraph report unless the user asks for one. Use the findings directly in the current task.
